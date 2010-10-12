@@ -50,9 +50,23 @@ class Socket(object):
             n = self.sock.send(buf)
             buf = buf[n:]
 
-    def recv(self, nbytes=1024):
+    def sendTo(self, host, port, buf):
+        address = (host, port)
+        while buf:
+            yield WaitWrite(self.sock)
+            n = self.sock.sendto(buf, address)
+            buf = buf[n:]
+
+    def sendBroadcast(self, port, buf):
+        yield self.sendTo('<broadcast>', port, buf)
+
+    def recv(self, nbytes=4096):
         yield WaitRead(self.sock)
         yield self.sock.recv(nbytes)
+
+    def recvFrom(self, nbytes=4096):
+        yield WaitRead(self.sock)
+        yield self.sock.recvfrom(nbytes)
 
     def close(self):
         yield self.sock.shutdown(socket.SHUT_RDWR)
@@ -72,4 +86,24 @@ class Socket(object):
         sock = Socket(rawsock)
         sock.connect(host, port)
         return sock
+
+    @staticmethod
+    def udpClient():
+        rawsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return Socket(rawsock)
+
+    @staticmethod
+    def udpServer(host, port):
+        rawsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        rawsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        rawsock.bind((host, port))
+        return Socket(rawsock)
+
+    @staticmethod
+    def udpBroadcast(host, port):
+        rawsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        rawsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        rawsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        rawsock.bind((host, port))
+        return Socket(rawsock)
 

@@ -71,7 +71,7 @@ def dispatch_timed(block, msec, ntimes=None):
         t = time()
         while True:
             if (time() - t) > msec:
-                block()
+                yield block()
                 t = time()
             yield
 
@@ -79,7 +79,7 @@ def dispatch_timed(block, msec, ntimes=None):
         t = time()
         while ntimes > 0:
             if (time() - t) > msec:
-                block()
+                yield block()
                 ntimes -= 1
                 t = time()
             yield

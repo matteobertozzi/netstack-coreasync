@@ -42,6 +42,10 @@ def work(n, value):
 def repeat_func():
     print 'Repeat'
 
+def timed_func():
+    import time
+    print 'TIMEOUT', time.time()
+
 def concurrent_func(text):
     for i in range(5):
         print text
@@ -54,6 +58,7 @@ if __name__ == '__main__':
         queue3 = coreasync.dispatch_queue_create('queue3')
 
         coreasync.dispatch_async(main_queue, foo())
+        coreasync.dispatch_timed(timed_func, 2.0, 7)
 
         data = ['Test 1', 'Test 2', 'Test 3']
         coreasync.dispatch_apply(len(data), queue2, lambda n: work(n, data[n]))

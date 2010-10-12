@@ -27,6 +27,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ==============================================================================
 
+from time import time
+
 from .queue import DispatchQueue
 from .sched import global_sched
 
@@ -63,6 +65,29 @@ def dispatch_concurrent_apply(iterations, block):
 
 def dispatch_concurrent_repeat(iterations, block):
     dispatch_repeat(iterations, block)
+
+def dispatch_timed(block, msec, ntimes=None):
+    def yfunc(msec):
+        t = time()
+        while True:
+            if (time() - t) > msec:
+                block()
+                t = time()
+            yield
+
+    def yfuncN(msec, ntimes):
+        t = time()
+        while ntimes > 0:
+            if (time() - t) > msec:
+                block()
+                ntimes -= 1
+                t = time()
+            yield
+
+    if ntimes:
+        dispatch_async(None, lambda ms=msec, n=ntimes: yfuncN(ms, n))
+    else:
+        dispatch_async(None, lambda ms=msec: yfunc(ms))
 
 # CoreAsync Decorators to dispatch work
 def asyncmethod(func):
